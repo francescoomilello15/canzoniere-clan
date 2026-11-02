@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#20372b">
+<title>Canzoniere del Clan</title>
+<style>
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  background: #f5f3eb;
+  color: #25372d;
+}
+header {
+  background: #20372b;
+  color: white;
+  padding: 30px 22px 26px;
+  border-radius: 0 0 24px 24px;
+}
+.eyebrow {
+  font-size: 11px;
+  letter-spacing: 2px;
+  color: #c4d1c4;
+}
+h1 { font-size: 27px; margin: 9px 0 5px; }
+header p { color: #d0d9d0; font-size: 14px; }
+.search {
+  width: 100%;
+  padding: 15px;
+  border: none;
+  border-radius: 12px;
+  margin-top: 15px;
+  font-size: 16px;
+  outline-color: #8ba58d;
+}
+main { padding: 22px 18px; max-width: 650px; margin: auto; }
+h2 { font-size: 18px; margin: 23px 0 13px; }
+.categories {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+}
+.category {
+  border: 1px solid #e0e1d8;
+  background: white;
+  padding: 17px 12px;
+  border-radius: 13px;
+  text-align: left;
+  color: #344b39;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.category.active { background: #dce8db; border-color: #839c83; }
+.song {
+  background: white;
+  border: 1px solid #e7e5dc;
+  padding: 16px;
+  border-radius: 13px;
+  margin-bottom: 10px;
+  cursor: pointer;
+}
+.song h3 { margin: 0 0 5px; font-size: 16px; }
+.song small { color: #788276; }
+#detail {
+  display: none;
+  background: white;
+  border-radius: 15px;
+  padding: 20px;
+  margin-top: 15px;
+  white-space: pre-wrap;
+  line-height: 1.7;
+}
+.back {
+  border: 0;
+  background: #e8eee5;
+  color: #304d36;
+  padding: 10px 14px;
+  border-radius: 9px;
+  margin-bottom: 15px;
+}
+.empty { color: #858b80; font-size: 14px; padding: 12px 0; }
+footer { text-align: center; color: #92978d; padding: 25px; font-size: 12px; }
+</style>
+</head>
+<body>
+<header>
+  <div class="eyebrow">IL NOSTRO REPERTORIO</div>
+  <h1>♫ Canzoniere del Clan</h1>
+  <p>Una strada, tante voci, mille canzoni.</p>
+  <input class="search" id="search" placeholder="⌕ Cerca una canzone..." oninput="render()">
+</header>
+
+<main>
+  <section id="home">
+    <h2>Categorie</h2>
+    <div class="categories" id="categories"></div>
+    <h2 id="listTitle">Tutte le canzoni</h2>
+    <div id="songs"></div>
+  </section>
+  <section id="detail"></section>
+</main>
+
+<footer>Il Canzoniere del Clan · Sempre in cammino</footer>
+
+<script>
+const categories = [
+  "Tutte",
+  "Fuoco",
+  "Route",
+  "Canti scout",
+  "Spiritualità",
+  "Varie"
+];
+
+const songs = [];
+
+let selected = "Tutte";
+
+const categoryIcons = {
+  "Tutte": "♫",
+  "Fuoco": "🔥",
+  "Route": "🥾",
+  "Canti scout": "⚜️",
+  "Spiritualità": "✦",
+  "Varie": "♪"
+};
+
+function createCategories() {
+  document.getElementById("categories").innerHTML =
+    categories.filter(c => c !== "Tutte").map(c =>
+      `<button class="category ${selected === c ? "active" : ""}"
+      onclick="choose('${c}')">${categoryIcons[c]} ${c}</button>`
+    ).join("");
+}
+
+function choose(category) {
+  selected = selected === category ? "Tutte" : category;
+  render();
+}
+
+function render() {
+  createCategories();
+  const query = document.getElementById("search").value.toLowerCase();
+
+  const filtered = songs.filter(song =>
+    (selected === "Tutte" || song.category === selected) &&
+    (song.title.toLowerCase().includes(query) ||
+     song.text.toLowerCase().includes(query))
+  );
+
+  document.getElementById("listTitle").textContent =
+    query ? "Risultati della ricerca" :
+    selected === "Tutte" ? "Tutte le canzoni" : selected;
+
+  document.getElementById("songs").innerHTML = filtered.length
+    ? filtered.map((song, i) =>
+      `<div class="song" onclick="openSong(${songs.indexOf(song)})">
+        <h3>${escapeHTML(song.title)}</h3>
+        <small>${escapeHTML(song.category)}</small>
+      </div>`
+    ).join("")
+    : '<div class="empty">Nessuna canzone trovata. Potrai aggiungerla presto!</div>';
+}
+
+function escapeHTML(value) {
+  return String(value).replace(/[&<>"']/g, char => ({
+    "&": "&amp;", "<": "&lt;", ">": "&gt;",
+    '"': "&quot;", "'": "&#39;"
+  })[char]);
+}
+
+function openSong(index) {
+  const song = songs[index];
+  document.getElementById("home").style.display = "none";
+  const detail = document.getElementById("detail");
+  detail.style.display = "block";
+  detail.innerHTML =
+    `<button class="back" onclick="closeSong()">← Indietro</button>
+     <h2>${escapeHTML(song.title)}</h2>
+     <small>${escapeHTML(song.category)}</small>
+     <p>${escapeHTML(song.text)}</p>`;
+}
+
+function closeSong() {
+  document.getElementById("detail").style.display = "none";
+  document.getElementById("home").style.display = "block";
+}
+
+render();
+</script>
+</body>
+</html>
