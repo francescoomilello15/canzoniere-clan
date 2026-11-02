@@ -157,7 +157,26 @@
   <main>
 
     <input id="search" placeholder="🔎 Cerca una canzone..." />
+<section id="mainMenu">
+  <h2>Esplora il canzoniere</h2>
 
+  <button class="categoryButton" data-category="Canti scout">
+    🎒 Canti scout
+  </button>
+
+  <button class="categoryButton" data-category="Canti non scout">
+    🎵 Canti non scout
+  </button>
+
+  <button class="categoryButton" data-category="Canti di chiesa">
+    ⛪ Canti di chiesa
+  </button>
+</section>
+
+<section id="categoryView" class="hidden">
+  <button id="backButton" class="secondary">← Torna al menù</button>
+  <h2 id="categoryTitle"></h2>
+</section>
     <section id="adminLogin" class="card">
 
       <h2>Area amministratore</h2>
@@ -181,16 +200,10 @@
       <input id="songTitle" placeholder="Titolo della canzone">
 
       <select id="songCategory">
-
-        <option>Fuoco</option>
-
-        <option>Route</option>
-
-        <option>Canti scout</option>
-
-        <option>Spiritualità</option>
-
-        <option>Varie</option>
+  <option>Canti scout</option>
+  <option>Canti non scout</option>
+  <option>Canti di chiesa</option>
+</select>
 
       </select>
 
@@ -206,7 +219,8 @@
 
     </section>
 
-    <h2>Canzoni</h2>
+    <h2 id="songsHeading" class="hidden">Canzoni</h2>
+<div id="songsList" class="hidden">Caricamento canzoni...</div>
 
     <div id="songsList">Caricamento canzoni...</div>
 
@@ -263,7 +277,7 @@
     let editingId = null;
 
     let isAdmin = false;
-
+let selectedCategory = null;
     const $ = id => document.getElementById(id);
 
     function showStatus(message) {
@@ -279,18 +293,18 @@
     }
 
     function renderSongs() {
-
+$("songsHeading").classList.toggle("hidden", !selectedCategory);
+$("songsList").classList.toggle("hidden", !selectedCategory);
       const query = $("search").value.toLowerCase().trim();
 
       const filtered = songs.filter(song =>
-
-        (song.title || "").toLowerCase().includes(query) ||
-
-        (song.lyrics || "").toLowerCase().includes(query) ||
-
-        (song.category || "").toLowerCase().includes(query)
-
-      );
+  (!selectedCategory || song.category === selectedCategory) &&
+  (
+    (song.title || "").toLowerCase().includes(query) ||
+    (song.lyrics || "").toLowerCase().includes(query) ||
+    (song.category || "").toLowerCase().includes(query)
+  )
+);
 
       $("songsList").replaceChildren();
 
@@ -460,7 +474,7 @@
 
       $("songLyrics").value = "";
 
-      $("songCategory").value = "Fuoco";
+      $("songCategory").value = "Canti scout";
 
       $("saveButton").textContent = "Aggiungi canzone";
 
@@ -579,7 +593,23 @@
     }
 
     $("search").addEventListener("input", renderSongs);
+document.querySelectorAll(".categoryButton").forEach(button => {
+  button.addEventListener("click", () => {
+    selectedCategory = button.dataset.category;
+    $("mainMenu").classList.add("hidden");
+    $("categoryView").classList.remove("hidden");
+    $("categoryTitle").textContent = selectedCategory;
+    renderSongs();
+  });
+});
 
+$("backButton").addEventListener("click", () => {
+  selectedCategory = null;
+  $("mainMenu").classList.remove("hidden");
+  $("categoryView").classList.add("hidden");
+  $("search").value = "";
+  renderSongs();
+});
     loadSongs();
 
   </script>
