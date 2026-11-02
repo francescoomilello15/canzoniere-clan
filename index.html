@@ -1,195 +1,589 @@
 <!DOCTYPE html>
+
 <html lang="it">
+
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="theme-color" content="#20372b">
-<title>Canzoniere del Clan</title>
-<style>
-* { box-sizing: border-box; }
-body {
-  margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  background: #f5f3eb;
-  color: #25372d;
-}
-header {
-  background: #20372b;
-  color: white;
-  padding: 30px 22px 26px;
-  border-radius: 0 0 24px 24px;
-}
-.eyebrow {
-  font-size: 11px;
-  letter-spacing: 2px;
-  color: #c4d1c4;
-}
-h1 { font-size: 27px; margin: 9px 0 5px; }
-header p { color: #d0d9d0; font-size: 14px; }
-.search {
-  width: 100%;
-  padding: 15px;
-  border: none;
-  border-radius: 12px;
-  margin-top: 15px;
-  font-size: 16px;
-  outline-color: #8ba58d;
-}
-main { padding: 22px 18px; max-width: 650px; margin: auto; }
-h2 { font-size: 18px; margin: 23px 0 13px; }
-.categories {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 10px;
-}
-.category {
-  border: 1px solid #e0e1d8;
-  background: white;
-  padding: 17px 12px;
-  border-radius: 13px;
-  text-align: left;
-  color: #344b39;
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-}
-.category.active { background: #dce8db; border-color: #839c83; }
-.song {
-  background: white;
-  border: 1px solid #e7e5dc;
-  padding: 16px;
-  border-radius: 13px;
-  margin-bottom: 10px;
-  cursor: pointer;
-}
-.song h3 { margin: 0 0 5px; font-size: 16px; }
-.song small { color: #788276; }
-#detail {
-  display: none;
-  background: white;
-  border-radius: 15px;
-  padding: 20px;
-  margin-top: 15px;
-  white-space: pre-wrap;
-  line-height: 1.7;
-}
-.back {
-  border: 0;
-  background: #e8eee5;
-  color: #304d36;
-  padding: 10px 14px;
-  border-radius: 9px;
-  margin-bottom: 15px;
-}
-.empty { color: #858b80; font-size: 14px; padding: 12px 0; }
-footer { text-align: center; color: #92978d; padding: 25px; font-size: 12px; }
-</style>
+
+  <meta charset="UTF-8">
+
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>Canzoniere del Clan</title>
+
+  <style>
+
+    * { box-sizing: border-box; }
+
+    body {
+
+      margin: 0;
+
+      font-family: Arial, sans-serif;
+
+      background: #f3f1e9;
+
+      color: #26352c;
+
+    }
+
+    header {
+
+      background: #244b38;
+
+      color: white;
+
+      padding: 28px 18px;
+
+      text-align: center;
+
+    }
+
+    header h1 { margin: 0 0 8px; }
+
+    header p { margin: 0; opacity: .85; }
+
+    main {
+
+      max-width: 760px;
+
+      margin: 25px auto;
+
+      padding: 0 16px 40px;
+
+    }
+
+    input, select, textarea, button {
+
+      font: inherit;
+
+      width: 100%;
+
+      padding: 12px;
+
+      border-radius: 9px;
+
+      border: 1px solid #c9cec7;
+
+      margin: 6px 0;
+
+    }
+
+    textarea { min-height: 150px; resize: vertical; }
+
+    button {
+
+      background: #315c43;
+
+      color: white;
+
+      border: 0;
+
+      font-weight: bold;
+
+      cursor: pointer;
+
+    }
+
+    button.secondary { background: #68766b; }
+
+    button.danger { background: #9b3939; }
+
+    .card {
+
+      background: white;
+
+      border-radius: 12px;
+
+      padding: 17px;
+
+      margin: 13px 0;
+
+      box-shadow: 0 2px 8px #0000000c;
+
+    }
+
+    .song-title { font-size: 19px; font-weight: bold; }
+
+    .category {
+
+      display: inline-block;
+
+      color: #315c43;
+
+      background: #e7efe8;
+
+      padding: 5px 9px;
+
+      border-radius: 20px;
+
+      font-size: 12px;
+
+      margin: 8px 0;
+
+    }
+
+    .lyrics {
+
+      white-space: pre-wrap;
+
+      line-height: 1.6;
+
+      margin-top: 12px;
+
+    }
+
+    .hidden { display: none; }
+
+    .admin-actions { display: flex; gap: 8px; }
+
+    .admin-actions button { flex: 1; }
+
+    #status { color: #8b3434; }
+
+  </style>
+
 </head>
+
 <body>
-<header>
-  <div class="eyebrow">IL NOSTRO REPERTORIO</div>
-  <h1>♫ Canzoniere del Clan</h1>
-  <p>Una strada, tante voci, mille canzoni.</p>
-  <input class="search" id="search" placeholder="⌕ Cerca una canzone..." oninput="render()">
-</header>
 
-<main>
-  <section id="home">
-    <h2>Categorie</h2>
-    <div class="categories" id="categories"></div>
-    <h2 id="listTitle">Tutte le canzoni</h2>
-    <div id="songs"></div>
-  </section>
-  <section id="detail"></section>
-</main>
+  <header>
 
-<footer>Il Canzoniere del Clan · Sempre in cammino</footer>
+    <h1>🌲 Canzoniere del Clan</h1>
 
-<script>
-const categories = [
-  "Tutte",
-  "Fuoco",
-  "Route",
-  "Canti scout",
-  "Spiritualità",
-  "Varie"
-];
+    <p>Le canzoni che accompagnano il nostro cammino</p>
 
-const songs = [];
+  </header>
 
-let selected = "Tutte";
+  <main>
 
-const categoryIcons = {
-  "Tutte": "♫",
-  "Fuoco": "🔥",
-  "Route": "🥾",
-  "Canti scout": "⚜️",
-  "Spiritualità": "✦",
-  "Varie": "♪"
-};
+    <input id="search" placeholder="🔎 Cerca una canzone..." />
 
-function createCategories() {
-  document.getElementById("categories").innerHTML =
-    categories.filter(c => c !== "Tutte").map(c =>
-      `<button class="category ${selected === c ? "active" : ""}"
-      onclick="choose('${c}')">${categoryIcons[c]} ${c}</button>`
-    ).join("");
-}
+    <section id="adminLogin" class="card">
 
-function choose(category) {
-  selected = selected === category ? "Tutte" : category;
-  render();
-}
+      <h2>Area amministratore</h2>
 
-function render() {
-  createCategories();
-  const query = document.getElementById("search").value.toLowerCase();
+      <input id="email" type="email" placeholder="La tua email">
 
-  const filtered = songs.filter(song =>
-    (selected === "Tutte" || song.category === selected) &&
-    (song.title.toLowerCase().includes(query) ||
-     song.text.toLowerCase().includes(query))
-  );
+      <input id="password" type="password" placeholder="La tua password">
 
-  document.getElementById("listTitle").textContent =
-    query ? "Risultati della ricerca" :
-    selected === "Tutte" ? "Tutte le canzoni" : selected;
+      <button id="loginButton">Accedi</button>
 
-  document.getElementById("songs").innerHTML = filtered.length
-    ? filtered.map((song, i) =>
-      `<div class="song" onclick="openSong(${songs.indexOf(song)})">
-        <h3>${escapeHTML(song.title)}</h3>
-        <small>${escapeHTML(song.category)}</small>
-      </div>`
-    ).join("")
-    : '<div class="empty">Nessuna canzone trovata. Potrai aggiungerla presto!</div>';
-}
+      <p id="status" role="status"></p>
 
-function escapeHTML(value) {
-  return String(value).replace(/[&<>"']/g, char => ({
-    "&": "&amp;", "<": "&lt;", ">": "&gt;",
-    '"': "&quot;", "'": "&#39;"
-  })[char]);
-}
+    </section>
 
-function openSong(index) {
-  const song = songs[index];
-  document.getElementById("home").style.display = "none";
-  const detail = document.getElementById("detail");
-  detail.style.display = "block";
-  detail.innerHTML =
-    `<button class="back" onclick="closeSong()">← Indietro</button>
-     <h2>${escapeHTML(song.title)}</h2>
-     <small>${escapeHTML(song.category)}</small>
-     <p>${escapeHTML(song.text)}</p>`;
-}
+    <section id="adminPanel" class="card hidden">
 
-function closeSong() {
-  document.getElementById("detail").style.display = "none";
-  document.getElementById("home").style.display = "block";
-}
+      <h2>Gestione canzoni</h2>
 
-render();
-</script>
+      <p>Sei entrato nell'area amministratore.</p>
+
+      <input id="songTitle" placeholder="Titolo della canzone">
+
+      <select id="songCategory">
+
+        <option>Fuoco</option>
+
+        <option>Route</option>
+
+        <option>Canti scout</option>
+
+        <option>Spiritualità</option>
+
+        <option>Varie</option>
+
+      </select>
+
+      <textarea id="songLyrics" placeholder="Testo della canzone"></textarea>
+
+      <button id="saveButton">Aggiungi canzone</button>
+
+      <button id="cancelButton" class="secondary hidden">Annulla modifica</button>
+
+      <button id="logoutButton" class="secondary">Esci</button>
+
+      <p id="adminStatus" role="status"></p>
+
+    </section>
+
+    <h2>Canzoni</h2>
+
+    <div id="songsList">Caricamento canzoni...</div>
+
+  </main>
+
+  <script type="module">
+
+    import { initializeApp } from
+
+      "https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js";
+
+    import { getAuth, signInWithEmailAndPassword, signOut,
+
+      onAuthStateChanged } from
+
+      "https://www.gstatic.com/firebasejs/11.6.0/firebase-auth.js";
+
+    import { getFirestore, collection, addDoc, getDocs,
+
+      updateDoc, deleteDoc, doc, serverTimestamp } from
+
+      "https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+
+      apiKey: "AIzaSyBRnXjpMn0wZw82x-QQzl9_ebcwtq8zA0s",
+
+      authDomain: "canzoniere-clan.firebaseapp.com",
+
+      projectId: "canzoniere-clan",
+
+      storageBucket: "canzoniere-clan.firebasestorage.app",
+
+      messagingSenderId: "63936873378",
+
+      appId: "1:63936873378:web:36d7d9f32bedc766b628fb",
+
+      measurementId: "G-D578L317XE"
+
+    };
+
+    const ADMIN_UID = "INSERISCI_IL_TUO_UID";
+
+    const app = initializeApp(firebaseConfig);
+
+    const auth = getAuth(app);
+
+    const db = getFirestore(app);
+
+    const songsRef = collection(db, "songs");
+
+    let songs = [];
+
+    let editingId = null;
+
+    let isAdmin = false;
+
+    const $ = id => document.getElementById(id);
+
+    function showStatus(message) {
+
+      $("status").textContent = message;
+
+    }
+
+    function showAdminStatus(message) {
+
+      $("adminStatus").textContent = message;
+
+    }
+
+    function renderSongs() {
+
+      const query = $("search").value.toLowerCase().trim();
+
+      const filtered = songs.filter(song =>
+
+        (song.title || "").toLowerCase().includes(query) ||
+
+        (song.lyrics || "").toLowerCase().includes(query) ||
+
+        (song.category || "").toLowerCase().includes(query)
+
+      );
+
+      $("songsList").replaceChildren();
+
+      if (!filtered.length) {
+
+        $("songsList").textContent =
+
+          query ? "Nessuna canzone trovata." : "Ancora nessuna canzone.";
+
+        return;
+
+      }
+
+      filtered.sort((a, b) =>
+
+        (a.title || "").localeCompare(b.title || "", "it")
+
+      );
+
+      filtered.forEach(song => {
+
+        const card = document.createElement("article");
+
+        card.className = "card";
+
+        const title = document.createElement("div");
+
+        title.className = "song-title";
+
+        title.textContent = song.title || "Senza titolo";
+
+        const category = document.createElement("span");
+
+        category.className = "category";
+
+        category.textContent = song.category || "Varie";
+
+        const lyrics = document.createElement("div");
+
+        lyrics.className = "lyrics";
+
+        lyrics.textContent = song.lyrics || "";
+
+        card.append(title, category, lyrics);
+
+        if (isAdmin) {
+
+          const actions = document.createElement("div");
+
+          actions.className = "admin-actions";
+
+          const edit = document.createElement("button");
+
+          edit.textContent = "Modifica";
+
+          edit.addEventListener("click", () => startEdit(song));
+
+          const remove = document.createElement("button");
+
+          remove.textContent = "Elimina";
+
+          remove.className = "danger";
+
+          remove.addEventListener("click", () => removeSong(song.id));
+
+          actions.append(edit, remove);
+
+          card.append(actions);
+
+        }
+
+        $("songsList").append(card);
+
+      });
+
+    }
+
+    async function loadSongs() {
+
+      $("songsList").textContent = "Caricamento canzoni...";
+
+      try {
+
+        const snapshot = await getDocs(songsRef);
+
+        songs = snapshot.docs.map(item => ({
+
+          id: item.id,
+
+          ...item.data()
+
+        }));
+
+        renderSongs();
+
+      } catch (error) {
+
+        $("songsList").textContent =
+
+          "Non è stato possibile caricare le canzoni.";
+
+        console.error(error);
+
+      }
+
+    }
+
+    onAuthStateChanged(auth, async user => {
+
+      isAdmin = !!user && user.uid === ADMIN_UID;
+
+      $("adminLogin").classList.toggle("hidden", isAdmin);
+
+      $("adminPanel").classList.toggle("hidden", !isAdmin);
+
+      if (user && !isAdmin) {
+
+        await signOut(auth);
+
+        showStatus("Questo account non è autorizzato.");
+
+      }
+
+      renderSongs();
+
+    });
+
+    $("loginButton").addEventListener("click", async () => {
+
+      showStatus("");
+
+      try {
+
+        await signInWithEmailAndPassword(
+
+          auth,
+
+          $("email").value.trim(),
+
+          $("password").value
+
+        );
+
+        $("password").value = "";
+
+      } catch (error) {
+
+        showStatus("Accesso non riuscito. Controlla email e password.");
+
+      }
+
+    });
+
+    $("logoutButton").addEventListener("click", async () => {
+
+      await signOut(auth);
+
+      clearForm();
+
+    });
+
+    function clearForm() {
+
+      editingId = null;
+
+      $("songTitle").value = "";
+
+      $("songLyrics").value = "";
+
+      $("songCategory").value = "Fuoco";
+
+      $("saveButton").textContent = "Aggiungi canzone";
+
+      $("cancelButton").classList.add("hidden");
+
+      showAdminStatus("");
+
+    }
+
+    function startEdit(song) {
+
+      editingId = song.id;
+
+      $("songTitle").value = song.title || "";
+
+      $("songLyrics").value = song.lyrics || "";
+
+      $("songCategory").value = song.category || "Varie";
+
+      $("saveButton").textContent = "Salva modifiche";
+
+      $("cancelButton").classList.remove("hidden");
+
+      window.scrollTo({ top: 0, behavior: "smooth" });
+
+    }
+
+    $("cancelButton").addEventListener("click", clearForm);
+
+    $("saveButton").addEventListener("click", async () => {
+
+      if (!isAdmin) return;
+
+      const title = $("songTitle").value.trim();
+
+      const lyrics = $("songLyrics").value.trim();
+
+      const category = $("songCategory").value;
+
+      if (!title || !lyrics) {
+
+        showAdminStatus("Inserisci titolo e testo della canzone.");
+
+        return;
+
+      }
+
+      try {
+
+        const data = {
+
+          title,
+
+          lyrics,
+
+          category,
+
+          updatedAt: serverTimestamp()
+
+        };
+
+        if (editingId) {
+
+          await updateDoc(doc(db, "songs", editingId), data);
+
+          showAdminStatus("Canzone modificata!");
+
+        } else {
+
+          await addDoc(songsRef, {
+
+            ...data,
+
+            createdAt: serverTimestamp()
+
+          });
+
+          showAdminStatus("Canzone aggiunta!");
+
+        }
+
+        clearForm();
+
+        await loadSongs();
+
+      } catch (error) {
+
+        showAdminStatus("Errore nel salvataggio. Riprova.");
+
+        console.error(error);
+
+      }
+
+    });
+
+    async function removeSong(id) {
+
+      if (!isAdmin) return;
+
+      if (!confirm("Vuoi davvero eliminare questa canzone?")) return;
+
+      try {
+
+        await deleteDoc(doc(db, "songs", id));
+
+        await loadSongs();
+
+      } catch (error) {
+
+        alert("Non è stato possibile eliminare la canzone.");
+
+        console.error(error);
+
+      }
+
+    }
+
+    $("search").addEventListener("input", renderSongs);
+
+    loadSongs();
+
+  </script>
+
 </body>
+
 </html>
