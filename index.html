@@ -506,12 +506,21 @@ function transposeChord(chord, amount) {
 }
 
 function addChordLine(parent, line) {
-  const tokens = line.match(/\[[^\]]+\]|[^\s]+|\s+/g) || [];
+  const tokens = line.match(/\*\*[\s\S]+?\*\*|\[[^\]]+\]|[^\s]+|\s+/g) || [];
   let pendingChord = "";
+  let bold = false;
 
   tokens.forEach(token => {
+    if (token.startsWith("**") && token.endsWith("**")) {
+      const content = token.slice(2, -2);
+      const span = document.createElement("strong");
+      addChordLine(span, content);
+      parent.append(span);
+      return;
+    }
+
     if (/^\[[^\]]+\]$/.test(token)) {
-      pendingChord = token.slice(1,-1);
+      pendingChord = token.slice(1, -1);
       return;
     }
 
@@ -550,6 +559,7 @@ function addChordLine(parent, line) {
   }
 }
 
+
 function renderReader() {
   const lines = (currentSong.lyrics || "").split("\n");
   const middle = Math.ceil(lines.length / 2);
@@ -559,7 +569,6 @@ function renderReader() {
 
   $("leftColumn").replaceChildren();
   $("rightColumn").replaceChildren();
-
   function renderColumn(lines, target) {
     lines.forEach(line => {
       const paragraph = document.createElement("div");
