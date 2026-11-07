@@ -636,14 +636,24 @@ function stopScrolling() {
 }
 
 $("loginButton").addEventListener("click", async () => {
+  const email = $("email").value.trim();
+  const password = $("password").value;
+
   try {
-    await signInWithEmailAndPassword(
+    const result = await signInWithEmailAndPassword(
       auth,
-      $("email").value,
-      $("password").value
+      email,
+      password
     );
+
+    showMessage("Accesso Firebase riuscito. Verifica amministratore...");
+
+    if (result.user.uid !== ADMIN_UID) {
+      showMessage("UID non corrispondente: " + result.user.uid);
+    }
+
   } catch (error) {
-    showMessage("Accesso non riuscito. Controlla email e password.");
+    showMessage("Errore Firebase: " + error.code);
   }
 });
 
