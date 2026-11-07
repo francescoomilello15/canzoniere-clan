@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="it">
 <head>
@@ -58,9 +59,7 @@ h2 { font-size: 19px; }
   align-items: center;
 }
 
-button {
-  cursor: pointer;
-}
+button { cursor: pointer; }
 
 .hidden { display: none !important; }
 
@@ -119,23 +118,40 @@ textarea {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 7px;
-  padding: 8px;
+  gap: 8px;
+  padding: 9px;
   background: #edf2eb;
 }
 
 .readerControls button {
   border: 0;
   border-radius: 7px;
-  padding: 8px 11px;
+  padding: 9px 13px;
   background: white;
-  font-size: 16px;
+  font-size: 17px;
+  color: #183d2b;
 }
 
-.readerControls input {
-  width: 75px;
-  margin: 0;
-  padding: 5px;
+.scrollSpeedControls {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin-left: auto;
+  font-size: 13px;
+}
+
+.scrollSpeedControls button {
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  font-size: 21px;
+  font-weight: bold;
+}
+
+#scrollSpeedValue {
+  min-width: 15px;
+  text-align: center;
+  font-weight: bold;
 }
 
 #readerContent {
@@ -146,6 +162,7 @@ textarea {
 
 .lyricsColumns {
   display: block;
+  width: 100%;
 }
 
 .lyricsColumn {
@@ -155,8 +172,8 @@ textarea {
 
 .lyricLine {
   font-size: 15px;
-  line-height: 1.8;
-  margin: 0 0 9px;
+  line-height: 1.45;
+  margin: 0 0 5px;
   white-space: pre-wrap;
 }
 
@@ -165,7 +182,7 @@ textarea {
   flex-direction: column;
   align-items: flex-start;
   vertical-align: bottom;
-  line-height: 1.2;
+  line-height: 1.15;
   margin-right: 2px;
 }
 
@@ -191,11 +208,6 @@ textarea {
   color: #8b2020;
 }
 
-@media (max-width: 360px) {
-  .lyricsColumns { gap: 7px; }
-  .lyricLine { line-height: 1.7; }
-  #readerContent { padding-left: 6px; padding-right: 6px; }
-}
 .editorToolbar {
   display: flex;
   align-items: center;
@@ -212,7 +224,16 @@ textarea {
   color: #222;
   font-size: 18px;
   cursor: pointer;
-}</style>
+}
+
+@media (max-width: 360px) {
+  .lyricLine { line-height: 1.4; }
+  #readerContent {
+    padding-left: 6px;
+    padding-right: 6px;
+  }
+}
+</style>
 </head>
 
 <body>
@@ -259,13 +280,14 @@ textarea {
       </select>
 
       <label for="songLyrics">Testo e accordi</label>
-      <div class="editorToolbar">
-  <button type="button" id="boldButton" title="Grassetto">
-    <strong>B</strong>
-  </button>
-</div>
 
-<textarea id="songLyrics" placeholder="Esempio:
+      <div class="editorToolbar">
+        <button type="button" id="boldButton" title="Grassetto">
+          <strong>B</strong>
+        </button>
+      </div>
+
+      <textarea id="songLyrics" placeholder="Esempio:
 [G]Camminerò [D]insieme a te
 [Em]Sulle [C]strade del mondo"></textarea>
 
@@ -294,20 +316,20 @@ textarea {
   <div class="readerControls">
     <button id="smallerText">A−</button>
     <button id="largerText">A+</button>
-    <button id="transposeDown">−</button>
-    <span id="transposeValue">0 semitoni</span>
-    <button id="transposeUp">+</button>
-    <span id="capoInfo">Capotasto: nessuno</span>
+
     <button id="scrollButton">▶️ Scorrimento</button>
-    <label style="font-size:13px">Velocità
-      <input id="scrollSpeed" type="number" min="1" max="10" value="3">
-    </label>
+
+    <div class="scrollSpeedControls">
+      <span>Velocità</span>
+      <button id="scrollSlower" aria-label="Diminuisci velocità">−</button>
+      <span id="scrollSpeedValue">3</span>
+      <button id="scrollFaster" aria-label="Aumenta velocità">+</button>
+    </div>
   </div>
 
   <div id="readerContent">
     <div class="lyricsColumns">
       <div id="leftColumn" class="lyricsColumn"></div>
-      <div id="rightColumn" class="lyricsColumn"></div>
     </div>
   </div>
 </section>
@@ -328,7 +350,7 @@ import {
 
 /* CONFIGURAZIONE FIREBASE */
 const firebaseConfig = {
-  apiKey: "AIzaSyBRnXjpMn0wZw82x-QQzl9_ebcwtq8zA0s",
+  apiKey: "AIzaSyBRnXjpMn0wZw82x-QQz19_ebcwtq8zA0s",
   authDomain: "canzoniere-clan.firebaseapp.com",
   projectId: "canzoniere-clan",
   storageBucket: "canzoniere-clan.firebasestorage.app",
@@ -344,7 +366,10 @@ const auth = getAuth(app);
 const db = getFirestore(app);
 
 const $ = id => document.getElementById(id);
-  $("boldButton").addEventListener("click", () => {
+
+
+/* FORMATTAZIONE GRASSETTO */
+$("boldButton").addEventListener("click", () => {
   const textarea = $("songLyrics");
   const start = textarea.selectionStart;
   const end = textarea.selectionEnd;
@@ -365,48 +390,48 @@ const $ = id => document.getElementById(id);
   textarea.focus();
 });
 
+
 let songs = [];
 let selectedCategory = null;
 let editingId = null;
 let currentSong = null;
-let transpose = 0;
 let fontSize = 15;
 let scrolling = false;
 let scrollTimer = null;
+let scrollSpeed = 3;
 
-const notes = ["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"];
-
-const flatMap = {
-  "Db":"C#", "Eb":"D#", "Gb":"F#",
-  "Ab":"G#", "Bb":"A#"
-};
 
 function showMessage(message) {
   $("message").textContent = message;
 }
 
+
+/* CARICAMENTO CANTI */
 async function loadSongs() {
   try {
     const snapshot = await getDocs(collection(db, "songs"));
+
     songs = snapshot.docs.map(item => ({
       id: item.id,
       ...item.data()
     }));
+
     renderSongs();
     renderAdminSongs();
+
   } catch (error) {
     showMessage("Errore nel caricamento dei canti: " + error.message);
   }
 }
 
+
+/* ELENCO CANTI */
 function renderSongs() {
   const query = $("search").value.toLowerCase().trim();
 
   const filtered = songs.filter(song =>
     song.category === selectedCategory &&
-    (
-      (song.title || "").toLowerCase().includes(query)
-    )
+    (song.title || "").toLowerCase().includes(query)
   );
 
   $("songsList").replaceChildren();
@@ -432,10 +457,13 @@ function renderSongs() {
 
     button.append(title, arrow);
     button.addEventListener("click", () => openSong(song));
+
     $("songsList").append(button);
   });
 }
 
+
+/* ELENCO AMMINISTRATORE */
 function renderAdminSongs() {
   $("adminSongs").replaceChildren();
 
@@ -462,6 +490,8 @@ function renderAdminSongs() {
   });
 }
 
+
+/* MODIFICA CANTO */
 function editSong(song) {
   editingId = song.id;
   $("songTitle").value = song.title || "";
@@ -472,6 +502,8 @@ function editSong(song) {
   $("songTitle").scrollIntoView({ behavior: "smooth" });
 }
 
+
+/* RESET MODULO */
 function resetForm() {
   editingId = null;
   $("songTitle").value = "";
@@ -481,6 +513,8 @@ function resetForm() {
   $("cancelEdit").classList.add("hidden");
 }
 
+
+/* SALVATAGGIO CANTO */
 async function saveSong() {
   const title = $("songTitle").value.trim();
   const lyrics = $("songLyrics").value.trim();
@@ -508,11 +542,14 @@ async function saveSong() {
     resetForm();
     showMessage("Canto salvato correttamente.");
     await loadSongs();
+
   } catch (error) {
     showMessage("Impossibile salvare: " + error.message);
   }
 }
 
+
+/* ELIMINAZIONE CANTO */
 async function removeSong(song) {
   if (!confirm("Vuoi eliminare il canto " + song.title + "?")) return;
 
@@ -520,34 +557,17 @@ async function removeSong(song) {
     await deleteDoc(doc(db, "songs", song.id));
     showMessage("Canto eliminato.");
     await loadSongs();
+
   } catch (error) {
     showMessage("Errore: " + error.message);
   }
 }
 
-function transposeChord(chord, amount) {
-  const match = chord.match(/^([A-G](?:#|b)?)(.*?)(?:\/([A-G](?:#|b)?))?$/);
 
-  if (!match) return chord;
-
-  function moveNote(note) {
-    const normalized = flatMap[note] || note;
-    const index = notes.indexOf(normalized);
-    if (index < 0) return note;
-    return notes[(index + amount + 120) % 12];
-  }
-
-  const root = moveNote(match[1]);
-  const suffix = match[2] || "";
-  const bass = match[3] ? "/" + moveNote(match[3]) : "";
-
-  return root + suffix + bass;
-}
-
+/* VISUALIZZAZIONE ACCORDI E GRASSETTO */
 function addChordLine(parent, line) {
   const tokens = line.match(/\*\*[\s\S]+?\*\*|\[[^\]]+\]|[^\s]+|\s+/g) || [];
   let pendingChord = "";
-  let bold = false;
 
   tokens.forEach(token => {
     if (token.startsWith("**") && token.endsWith("**")) {
@@ -574,7 +594,7 @@ function addChordLine(parent, line) {
 
       const chord = document.createElement("span");
       chord.className = "chord";
-      chord.textContent = transposeChord(pendingChord, transpose);
+      chord.textContent = pendingChord;
 
       const word = document.createElement("span");
       word.className = "word";
@@ -582,7 +602,9 @@ function addChordLine(parent, line) {
 
       wrapper.append(chord, word);
       parent.append(wrapper);
+
       pendingChord = "";
+
     } else {
       const word = document.createElement("span");
       word.textContent = token;
@@ -593,61 +615,55 @@ function addChordLine(parent, line) {
   if (pendingChord) {
     const chord = document.createElement("span");
     chord.className = "chord";
-    chord.textContent = transposeChord(pendingChord, transpose);
+    chord.textContent = pendingChord;
     parent.append(chord);
   }
 }
 
 
+/* LETTORE A COLONNA SINGOLA */
 function renderReader() {
   const lines = (currentSong.lyrics || "").split("\n");
-  const middle = Math.ceil(lines.length / 2);
-
-  const left = lines.slice(0, middle);
-  const right = lines.slice(middle);
 
   $("leftColumn").replaceChildren();
-  $("rightColumn").replaceChildren();
-  function renderColumn(lines, target) {
-    lines.forEach(line => {
-      const paragraph = document.createElement("div");
-      paragraph.className = "lyricLine";
-      paragraph.style.fontSize = fontSize + "px";
-      addChordLine(paragraph, line);
-      target.append(paragraph);
-    });
-  }
 
-  renderColumn(left, $("leftColumn"));
-  renderColumn(right, $("rightColumn"));
+  lines.forEach(line => {
+    const paragraph = document.createElement("div");
+    paragraph.className = "lyricLine";
+    paragraph.style.fontSize = fontSize + "px";
 
-  $("transposeValue").textContent =
-    (transpose > 0 ? "+" : "") + transpose + " semitoni";
-
-  if (transpose < 0) {
-    $("capoInfo").textContent =
-      "Capotasto: " + Math.abs(transpose) + "° tasto*";
-  } else {
-    $("capoInfo").textContent = "Capotasto: nessuno";
-  }
+    addChordLine(paragraph, line);
+    $("leftColumn").append(paragraph);
+  });
 }
 
+
+/* APERTURA CANTO */
 function openSong(song) {
   stopScrolling();
+
   currentSong = song;
-  transpose = 0;
   fontSize = 15;
+  scrollSpeed = 3;
+
+  $("scrollSpeedValue").textContent = scrollSpeed;
   $("readerTitle").textContent = song.title || "";
+
   renderReader();
+
   $("reader").classList.remove("hidden");
   $("readerContent").scrollTop = 0;
 }
 
+
+/* CHIUSURA CANTO */
 function closeSong() {
   stopScrolling();
   $("reader").classList.add("hidden");
 }
 
+
+/* SCORRIMENTO AUTOMATICO */
 function startScrolling() {
   if (scrolling) {
     stopScrolling();
@@ -658,25 +674,42 @@ function startScrolling() {
   $("scrollButton").textContent = "⏸ Pausa";
 
   scrollTimer = setInterval(() => {
-    const speed = Math.max(1, Math.min(10,
-      Number($("scrollSpeed").value) || 3
-    ));
-
-    $("readerContent").scrollTop += speed * 0.35;
-
     const box = $("readerContent");
+
+    box.scrollTop += scrollSpeed * 0.35;
+
     if (box.scrollTop + box.clientHeight >= box.scrollHeight - 1) {
       stopScrolling();
     }
   }, 30);
 }
 
+
+/* PAUSA SCORRIMENTO */
 function stopScrolling() {
   scrolling = false;
   clearInterval(scrollTimer);
+  scrollTimer = null;
   $("scrollButton").textContent = "▶️ Scorrimento";
 }
 
+
+/* REGOLAZIONE VELOCITÀ */
+function updateScrollSpeed(amount) {
+  scrollSpeed = Math.max(1, Math.min(10, scrollSpeed + amount));
+  $("scrollSpeedValue").textContent = scrollSpeed;
+}
+
+$("scrollSlower").addEventListener("click", () => {
+  updateScrollSpeed(-1);
+});
+
+$("scrollFaster").addEventListener("click", () => {
+  updateScrollSpeed(1);
+});
+
+
+/* ACCESSO AMMINISTRATORE */
 $("loginButton").addEventListener("click", async () => {
   const email = $("email").value.trim();
   const password = $("password").value;
@@ -691,7 +724,7 @@ $("loginButton").addEventListener("click", async () => {
     showMessage("Accesso Firebase riuscito. Verifica amministratore...");
 
     if (result.user.uid !== ADMIN_UID) {
-      showMessage("UID non corrispondente: " + result.user.uid);
+      showMessage("UID non corrispondente.");
     }
 
   } catch (error) {
@@ -699,31 +732,41 @@ $("loginButton").addEventListener("click", async () => {
   }
 });
 
+
 onAuthStateChanged(auth, user => {
   if (user && user.uid === ADMIN_UID) {
     $("loginArea").classList.add("hidden");
     $("adminArea").classList.remove("hidden");
+
   } else {
     $("loginArea").classList.remove("hidden");
     $("adminArea").classList.add("hidden");
+
     if (user) signOut(auth);
   }
 });
 
+
+/* PULSANTI AMMINISTRATORE */
 $("logoutButton").addEventListener("click", () => signOut(auth));
 $("saveSong").addEventListener("click", saveSong);
 $("cancelEdit").addEventListener("click", resetForm);
 
+
+/* CATEGORIE */
 document.querySelectorAll(".categoryButton").forEach(button => {
   button.addEventListener("click", () => {
     selectedCategory = button.dataset.category;
+
     $("mainMenu").classList.add("hidden");
     $("categoryView").classList.remove("hidden");
     $("categoryTitle").textContent = selectedCategory;
     $("search").value = "";
+
     renderSongs();
   });
 });
+
 
 $("backButton").addEventListener("click", () => {
   selectedCategory = null;
@@ -731,19 +774,12 @@ $("backButton").addEventListener("click", () => {
   $("categoryView").classList.add("hidden");
 });
 
+
 $("search").addEventListener("input", renderSongs);
 $("closeReader").addEventListener("click", closeSong);
 
-$("transposeUp").addEventListener("click", () => {
-  transpose++;
-  renderReader();
-});
 
-$("transposeDown").addEventListener("click", () => {
-  transpose--;
-  renderReader();
-});
-
+/* DIMENSIONE TESTO */
 $("largerText").addEventListener("click", () => {
   fontSize = Math.min(24, fontSize + 1);
   renderReader();
@@ -754,9 +790,14 @@ $("smallerText").addEventListener("click", () => {
   renderReader();
 });
 
+
+/* AVVIO SCORRIMENTO */
 $("scrollButton").addEventListener("click", startScrolling);
 
+
+/* CARICAMENTO INIZIALE */
 loadSongs();
+
 </script>
 </body>
 </html>
