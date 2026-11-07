@@ -664,7 +664,56 @@ function closeSong() {
 
 
 /* SCORRIMENTO AUTOMATICO */
+
 function startScrolling() {
+  if (scrolling) {
+    stopScrolling();
+    return;
+  }
+
+  const box = $("readerContent");
+
+  if (box.scrollHeight <= box.clientHeight) {
+    return;
+  }
+
+  scrolling = true;
+  $("scrollButton").textContent = "⏸ Pausa";
+
+  let lastTime = null;
+
+  function move(timestamp) {
+    if (!scrolling) return;
+
+    if (lastTime === null) lastTime = timestamp;
+
+    const elapsed = Math.min(timestamp - lastTime, 50);
+    lastTime = timestamp;
+
+    box.scrollTop += scrollSpeed * elapsed * 0.025;
+
+    if (box.scrollTop + box.clientHeight >= box.scrollHeight - 2) {
+      stopScrolling();
+      return;
+    }
+
+    scrollTimer = requestAnimationFrame(move);
+  }
+
+  scrollTimer = requestAnimationFrame(move);
+}
+
+function stopScrolling() {
+  scrolling = false;
+
+  if (scrollTimer !== null) {
+    cancelAnimationFrame(scrollTimer);
+    scrollTimer = null;
+  }
+
+  $("scrollButton").textContent = "▶️ Scorrimento";
+}
+
   if (scrolling) {
     stopScrolling();
     return;
